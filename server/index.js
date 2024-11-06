@@ -1,3 +1,4 @@
+const cors = require("cors");
 require("dotenv").config();
 const connectDB = require("./db/db.connect");
 const express = require("express");
@@ -6,10 +7,11 @@ const app = express()
 app.use(express.json())
 connectDB()
 
+app.use(cors({ origin: "*" }));
 
 app.get('/', (req, res) => {
     res.send("Hello, welcome to todogpt")
-}) 
+})
 
 app.use("/api", taskRoutes);
 

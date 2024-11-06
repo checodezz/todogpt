@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
-import { fetchTasks } from "../features/taskSlice";
+import { fetchTasks, updateTaskStatusAsync } from "../features/taskSlice";
 import TaskCard from "./TaskCard";
 import { updateTaskStatus } from "../features/taskSlice";
 
@@ -25,8 +25,8 @@ const Taskboard = () => {
     const source = result?.source;
     const destination = result?.destination;
 
-    console.log(source);
-    console.log(destination);
+    // console.log(source);
+    // console.log(destination);
 
     console.log("Source Droppable ID:", source.droppableId);
     console.log("Destination Droppable ID:", destination?.droppableId);
@@ -43,9 +43,12 @@ const Taskboard = () => {
     const taskToMove = { ...columns[source.droppableId][source.index] };
     taskToMove.status = destination.droppableId;
 
-    console.log(taskToMove);
+    // console.log(taskToMove);
 
     dispatch(updateTaskStatus(taskToMove));
+    dispatch(
+      updateTaskStatusAsync({ _id: taskToMove._id, status: taskToMove.status })
+    );
   };
 
   return (

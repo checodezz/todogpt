@@ -2,7 +2,7 @@ import { Draggable } from "react-beautiful-dnd";
 
 const TaskCard = ({ task, index }) => {
   // Log the draggableId (task._id) for debugging
-  console.log("Task ID:", task._id); // You can log task._id or draggableId here
+  // console.log("Task ID:", task._id); // You can log task._id or draggableId here
   return (
     <Draggable draggableId={task._id} index={index}>
       {(provided) => (

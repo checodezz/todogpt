@@ -3,12 +3,29 @@ import axios from "axios";
 import { API_URL } from "../utils/constants";
 
 
-export const fetchTasks = createAsyncThunk("task/fetchTasks", async () => {
-    const response = await axios.get(`${API_URL}/api/tasks`);
-    // console.log(response.data);
-    return response.data
-})
+export const fetchTasks = createAsyncThunk(
+    "tasks/fetchTasks",
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await axios.get(`${API_URL}/api/tasks`);
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to fetch tasks");
+        }
+    }
+);
 
+export const updateTaskStatusAsync = createAsyncThunk(
+    "tasks/updateTaskStatusAsync",
+    async ({ _id, status }, { rejectWithValue }) => {
+        try {
+            const response = await axios.put(`${API_URL}/api/tasks/${_id}`, { status });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to update task status");
+        }
+    }
+);
 
 const taskSlice = createSlice({
     name: "tasks",
@@ -31,8 +48,8 @@ const taskSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchTasks.pending, (state) => {
-                state.loading = true,
-                    state.error = null
+                state.loading = true;
+                state.error = null
             })
             .addCase(fetchTasks.fulfilled, (state, action) => {
                 state.loading = false;
@@ -41,7 +58,16 @@ const taskSlice = createSlice({
             .addCase(fetchTasks.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.error.message;
-            });
+            })
+            .addCase(updateTaskStatusAsync.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(updateTaskStatusAsync.fulfilled, (state, action) => {
+                state.loading = false;
+                const { _id, status } = action.payload;
+                console.log(_id, status)
+            })
     }
 })
 

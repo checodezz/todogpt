@@ -1,13 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { DragDropContext, Droppable } from "react-beautiful-dnd";
 import { fetchTasks, updateTaskStatusAsync } from "../features/taskSlice";
 import TaskCard from "./TaskCard";
 import { updateTaskStatus } from "../features/taskSlice";
+import ChatComponent from "./ChatComponent";
+
+import { Box, Fab } from "@mui/material";
+import ChatIcon from "@mui/icons-material/Chat";
 
 const Taskboard = () => {
   const dispatch = useDispatch();
   const { tasks } = useSelector((state) => state.tasks);
+  const [isChatOpen, setIsChatOpen] = useState(false); // State to control chat visibility
 
   useEffect(() => {
     dispatch(fetchTasks());
@@ -24,13 +29,6 @@ const Taskboard = () => {
   const onDragEnd = (result) => {
     const source = result?.source;
     const destination = result?.destination;
-
-    // console.log(source);
-    // console.log(destination);
-
-    console.log("Source Droppable ID:", source.droppableId);
-    console.log("Destination Droppable ID:", destination?.droppableId);
-
     if (!destination) return;
 
     if (
@@ -43,8 +41,6 @@ const Taskboard = () => {
     const taskToMove = { ...columns[source.droppableId][source.index] };
     taskToMove.status = destination.droppableId;
 
-    // console.log(taskToMove);
-
     dispatch(updateTaskStatus(taskToMove));
     dispatch(
       updateTaskStatusAsync({ _id: taskToMove._id, status: taskToMove.status })
@@ -52,24 +48,64 @@ const Taskboard = () => {
   };
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="container">
-        <div className="row">
-          {Object.entries(columns).map(([status, tasks]) => (
-            <TaskColumn key={status} status={status} tasks={tasks} />
-          ))}
+    <>
+      <DragDropContext onDragEnd={onDragEnd}>
+        <div className="container">
+          <div className="row">
+            {Object.entries(columns).map(([status, tasks]) => (
+              <TaskColumn key={status} status={status} tasks={tasks} />
+            ))}
+          </div>
         </div>
-      </div>
-    </DragDropContext>
+      </DragDropContext>
+
+      {/* ChatComponent floating in the bottom-right corner */}
+      {!isChatOpen && (
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 20,
+            right: 20,
+            zIndex: 9999,
+          }}
+        >
+          <Fab
+            sx={{
+              backgroundColor: "#007bff",
+              color: "#fff",
+              borderRadius: "50%",
+              width: 60,
+              height: 60,
+              boxShadow: "0px 4px 12px rgba(0, 123, 255, 0.3)",
+            }}
+            onClick={() => setIsChatOpen(true)} // Open the chat on click
+          >
+            <ChatIcon />
+          </Fab>
+        </Box>
+      )}
+
+      {/* Render ChatComponent when it's open */}
+      {isChatOpen && (
+        <Box
+          sx={{
+            position: "fixed",
+            bottom: 80,
+            right: 20,
+            zIndex: 10000,
+            width: 350,
+            height: 400,
+            overflow: "hidden",
+          }}
+        >
+          <ChatComponent onClose={() => setIsChatOpen(false)} />
+        </Box>
+      )}
+    </>
   );
 };
 
-// TaskColumn Component defined within the same file
 const TaskColumn = ({ status, tasks }) => {
-  console.log(
-    "Task IDs in the column:",
-    tasks.map((task) => task._id)
-  );
   return (
     <div className="col-md-4">
       <h2 className="text-center">
@@ -83,7 +119,7 @@ const TaskColumn = ({ status, tasks }) => {
             className="bg-light p-3 rounded task-column"
           >
             {tasks.map((task, index) => (
-              <TaskCard key={task.status} task={task} index={index} />
+              <TaskCard key={task._id} task={task} index={index} />
             ))}
             {provided.placeholder}
           </div>

@@ -15,7 +15,6 @@ router.post("/completion", async (req, res) => {
     const tasks = await Task.find({});
     console.log(tasks)
 
-
     const taskDataText = tasks.map(task => `Task: ${task.title}, Status: ${task.status}, Description: ${task.description}`).join("\n");
 
     if (conversationHistory.length === 0) {

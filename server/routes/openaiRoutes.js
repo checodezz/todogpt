@@ -13,13 +13,15 @@ router.post("/completion", async (req, res) => {
     const query = req.body.query;
 
     const tasks = await Task.find({});
+    console.log(tasks)
+
 
     const taskDataText = tasks.map(task => `Task: ${task.title}, Status: ${task.status}, Description: ${task.description}`).join("\n");
 
     if (conversationHistory.length === 0) {
         conversationHistory.push({
             role: "system",
-            content: `You are a dedicated task management assistant. You should only answer questions that are directly related to task management, such as task status, updates, descriptions, or any specific details about the tasks provided. If a question is unrelated to the tasks or task management, politely respond that you can only provide assistance with task-related inquiries. Below is the current list of tasks:\n\n${taskDataText}\n\nUse only this information to answer user questions, and do not provide responses outside of the task context.`
+            content: `You are a dedicated task management assistant. You should only answer questions that are directly related to task management, such as task status, updates, descriptions, or any specific details about the tasks provided. If a question is unrelated to the tasks or task management, politely respond that you can only provide assistance with task-related inquiries. Below is the current list of tasks:\n\n${taskDataText}\n\nUse only this information to answer user questions, and do not provide responses outside of the task context also there is a difference between pending and ongoing tasks, pending means never touched, ongoing means currently doing, dont hallucinate.`
         });
     }
 

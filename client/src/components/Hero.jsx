@@ -34,19 +34,18 @@ const Hero = () => {
         position: "relative",
         padding: "20px",
         textAlign: "center",
+        overflow: "hidden",
       }}
     >
       {/* Hero Title Animation */}
       <motion.h1
-        initial={{ opacity: 0, y: -100, scale: 0.9, rotate: -20 }}
+        initial={{ opacity: 0, y: 60 }}
         animate={{
           opacity: inView ? 1 : 0,
-          y: inView ? 0 : -100,
-          scale: inView ? 1 : 0.9,
-          rotate: inView ? 0 : -20,
+          y: inView ? 0 : 60,
         }}
         transition={{
-          duration: 1.5,
+          duration: 1.2,
           ease: "easeOut",
           delay: 0.3,
         }}
@@ -63,16 +62,16 @@ const Hero = () => {
       >
         Welcome to{" "}
         <motion.span
-          initial={{ scale: 1 }}
+          initial={{ opacity: 0 }}
           animate={{
-            scale: inView ? 1.1 : 1,
+            opacity: inView ? 1 : 0,
             color: inView ? "#ff6f61" : "#333", // Change color when in view
             textShadow: inView ? "0 0 20px rgba(255, 111, 97, 0.8)" : "none",
           }}
           transition={{
             type: "spring",
             stiffness: 100,
-            damping: 10,
+            damping: 25,
             duration: 1,
           }}
         >
@@ -82,35 +81,35 @@ const Hero = () => {
 
       {/* Powered by FinOpsly AI Animation */}
       <motion.p
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: inView ? 1 : 0, y: inView ? 0 : 50 }}
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: inView ? 1 : 0, y: inView ? 0 : 30 }}
         transition={{
           duration: 1.2,
           ease: "easeOut",
           delay: 1,
         }}
         style={{
-          //   fontSize: "1.7rem",
-          //   fontWeight: "700",
           color: "#888",
           fontFamily: "Roboto, sans-serif",
           marginTop: "20px",
           lineHeight: "1.5",
           letterSpacing: "1px",
           cursor: "pointer",
+          fontSize: "1.4rem",
         }}
         whileHover={{
           color: "#ff6f61",
-          scale: 1.1,
+          scale: 1.05,
+          transition: { type: "spring", stiffness: 300, damping: 25 },
         }}
-        className="display-6"
       >
         Powered by FinOpsly AI
       </motion.p>
 
+      {/* Hero Subtitle with Parallax-like Effect */}
       <motion.p
-        initial={{ opacity: 0, y: 50 }}
-        animate={{ opacity: inView ? 1 : 0, y: inView ? 0 : 50 }}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: inView ? 1 : 0, y: inView ? 0 : 40 }}
         transition={{
           duration: 1.2,
           ease: "easeOut",
@@ -134,6 +133,7 @@ const Hero = () => {
         you'll effortlessly manage your workflow.
       </motion.p>
 
+      {/* Scroll Down Arrow */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{
@@ -153,9 +153,9 @@ const Hero = () => {
       >
         <motion.div
           animate={{
-            y: [0, -15, 0],
-            opacity: [1, 0.6, 1],
-            scale: [1, 1.2, 1],
+            y: [0, -12, 0],
+            opacity: [1, 0.7, 1],
+            scale: [1, 1.05, 1],
           }}
           transition={{
             duration: 1.2,
@@ -166,11 +166,13 @@ const Hero = () => {
           onClick={handleScrollDown}
           style={{
             cursor: "pointer",
-            fontSize: "3rem",
+            fontSize: "3.5rem",
             color: "#333",
             fontWeight: "bold",
             letterSpacing: "1px",
             display: "block",
+            transformOrigin: "center",
+            willChange: "transform, opacity",
           }}
         >
           &#x2193;

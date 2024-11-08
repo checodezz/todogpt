@@ -1,24 +1,29 @@
 import { useState, useRef, useEffect } from "react";
-import { TextField, Drawer, Box, Typography, Button } from "@mui/material";
+import {
+  TextField,
+  Drawer,
+  Box,
+  Typography,
+  Button,
+  CircularProgress,
+} from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import axios from "axios";
 import { API_URL } from "../utils/constants";
 
-const ChatComponent = () => {
+const ChatComponent = ({ onClose }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [open, setOpen] = useState(false);
-  const [isTyping, setIsTyping] = useState(false); // State to track typing status
-  const endOfMessagesRef = useRef(null); // Ref to the last message
+  const [isTyping, setIsTyping] = useState(false);
+  const endOfMessagesRef = useRef(null);
 
-  // Initialize with a greeting message
   useEffect(() => {
     setMessages([
       {
         role: "assistant",
         content: (
           <>
-            Hello! I am <strong> Finopsly</strong> your AI Assistant. You can
+            Hello! I am <strong>Finopsly</strong>, your AI Assistant. You can
             ask me anything related to tasks.
           </>
         ),
@@ -26,7 +31,6 @@ const ChatComponent = () => {
     ]);
   }, []);
 
-  // Scroll to the bottom whenever the messages array updates
   useEffect(() => {
     if (endOfMessagesRef.current) {
       endOfMessagesRef.current.scrollIntoView({
@@ -42,8 +46,8 @@ const ChatComponent = () => {
     if (input.trim() === "") return;
 
     setMessages([...messages, { role: "user", content: input }]);
+    setInput("");
 
-    // Show the typing indicator while waiting for the response
     setIsTyping(true);
 
     try {
@@ -53,136 +57,138 @@ const ChatComponent = () => {
 
       const assistantResponse = response.data.response.trim();
 
-      // Hide typing indicator and add assistant's response
       setIsTyping(false);
-
-      setMessages((prev) => [
-        ...prev,
+      setMessages((prevMessages) => [
+        ...prevMessages,
         { role: "assistant", content: assistantResponse },
       ]);
     } catch (error) {
-      console.error("Error:", error);
-      setIsTyping(false); // Hide typing indicator in case of an error
+      console.error("Error communicating with the API:", error);
+      setIsTyping(false);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        {
+          role: "assistant",
+          content:
+            "Sorry, there was an error processing your request. Please try again later.",
+        },
+      ]);
     }
-
-    setInput(""); // Clear input field
-  };
-
-  const toggleDrawer = () => {
-    setOpen(!open);
   };
 
   return (
-    <div>
-      {/* Show Open Chat button only when the drawer is closed */}
-      {!open && (
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={toggleDrawer}
-          sx={{
-            position: "fixed",
-            bottom: 20,
-            right: 20,
-            zIndex: 1000,
-          }}
-        >
-          Open Chat
-        </Button>
-      )}
-
-      {/* Chat Drawer */}
-      <Drawer
-        anchor="right"
-        open={open}
-        onClose={toggleDrawer}
+    <Drawer
+      anchor="right"
+      open={true}
+      onClose={onClose}
+      sx={{
+        width: "350px",
+        flexShrink: 0,
+        "& .MuiDrawer-paper": {
+          width: "350px",
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          padding: "16px",
+        },
+      }}
+    >
+      <Box
         sx={{
-          zIndex: 1100,
-          width: 350, // Fixed width for the drawer
-          maxWidth: "350px", // Ensure it doesn’t grow beyond 350px
-          flexShrink: 0, // Prevent the drawer from shrinking
-          "& .MuiDrawer-paper": {
-            width: 350, // Set the width of the drawer paper to match the drawer width
-            maxWidth: "350px", // Ensure paper doesn’t grow beyond 350px
-            overflow: "hidden", // Prevent overflow
-          },
+          flexGrow: 1,
+          overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <Box
           sx={{
-            flex: 1,
+            flexGrow: 1,
             overflowY: "auto",
-            padding: "20px",
-            maxHeight: "calc(100vh - 120px)",
+            paddingBottom: "16px",
+            marginBottom: "16px",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
-          {messages.map((msg, index) => (
+          {messages.map((message, index) => (
             <Box
               key={index}
               sx={{
                 display: "flex",
-                flexDirection: "column",
-                alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
-                backgroundColor: msg.role === "user" ? "#007bff" : "#f1f1f1",
-                color: msg.role === "user" ? "#fff" : "#333",
-                borderRadius: "15px",
-                padding: "10px 15px", // Padding inside the message bubble
-                marginBottom: "10px",
-                maxWidth: "75%", // Reduce maxWidth to prevent excessive space on the right
-                wordWrap: "break-word",
-                overflowWrap: "break-word",
-                marginLeft: msg.role === "assistant" ? "0" : "auto", // Align user messages to the right
-                marginRight: msg.role === "user" ? "0" : "auto", // Align assistant messages to the left
+                flexDirection:
+                  message.role === "assistant" ? "row" : "row-reverse",
+                marginBottom: "8px",
               }}
             >
-              <Typography variant="body2">
-                <strong>{msg.role === "user" ? "You" : "Assistant"}:</strong>{" "}
-                {msg.content}
-              </Typography>
+              <Box
+                sx={{
+                  maxWidth: "70%",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  backgroundColor:
+                    message.role === "assistant" ? "#e9ecef" : "#007bff",
+                  color: message.role === "assistant" ? "#000" : "#fff",
+                }}
+              >
+                <Typography>{message.content}</Typography>
+              </Box>
             </Box>
           ))}
-
-          {/* Show typing indicator if assistant is typing */}
           {isTyping && (
-            <Box sx={{ display: "flex", alignItems: "center" }}>
-              <Typography variant="body2" sx={{ color: "#888" }}>
-                <strong>Assistant:</strong> Typing...
-              </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "row",
+                marginBottom: "8px",
+              }}
+            >
+              <Box
+                sx={{
+                  maxWidth: "70%",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  backgroundColor: "#e9ecef",
+                }}
+              >
+                <CircularProgress size={24} />
+              </Box>
             </Box>
           )}
-
-          {/* This div serves as the scroll target */}
           <div ref={endOfMessagesRef} />
         </Box>
 
-        <form
+        <Box
+          component="form"
           onSubmit={handleSubmit}
-          style={{ display: "flex", padding: "10px" }}
+          sx={{ display: "flex", alignItems: "center" }}
         >
           <TextField
             variant="outlined"
+            placeholder="Type your message..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type a message..."
             sx={{
-              flex: 1,
-              marginRight: "10px",
-              backgroundColor: "#f1f1f1",
-              borderRadius: "20px",
-              padding: "10px",
+              flexGrow: 1,
+              marginRight: "8px",
             }}
+            fullWidth
+            autoFocus
           />
           <Button
             type="submit"
+            variant="contained"
+            color="primary"
             sx={{
-              borderRadius: "50%",
+              padding: "10px",
             }}
+            disabled={!input.trim()}
           >
             <SendIcon />
           </Button>
-        </form>
-      </Drawer>
-    </div>
+        </Box>
+      </Box>
+    </Drawer>
   );
 };
 

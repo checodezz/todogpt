@@ -14,6 +14,16 @@ export const fetchTasks = createAsyncThunk(
     }
 );
 
+export const addTaskAsync = createAsyncThunk("tasks/addTask", async (task, { rejectWithValue }) => {
+    try {
+        const response = await axios.post(`${API_URL}/api/tasks`, task);
+        return response.data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data?.message || "Failed to add task");
+    }
+});
+
+
 export const updateTaskStatusAsync = createAsyncThunk(
     "tasks/updateTaskStatusAsync",
     async ({ _id, status }, { rejectWithValue }) => {
@@ -22,6 +32,18 @@ export const updateTaskStatusAsync = createAsyncThunk(
             return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || "Failed to update task status");
+        }
+    }
+);
+
+export const deleteTaskAsync = createAsyncThunk(
+    "tasks/deleteTask",
+    async (_id, { rejectWithValue }) => {
+        try {
+            await axios.delete(`${API_URL}/api/tasks/${_id}`);
+            return _id;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || "Failed to delete task");
         }
     }
 );
@@ -35,6 +57,11 @@ const taskSlice = createSlice({
     },
 
     reducers: {
+        optimisticAddTask: (state, action) => {
+            state.tasks.push(action.payload);
+            state.addedTask = action.payload;
+        },
+
         updateTaskStatus: (state, action) => {
             const { _id, status } = action.payload
             console.log("reduce triggered", _id, status)
@@ -58,6 +85,21 @@ const taskSlice = createSlice({
                 state.loading = false;
                 state.error = action.error.message;
             })
+
+            .addCase(addTaskAsync.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(addTaskAsync.fulfilled, (state, action) => {
+                state.loading = false;
+                console.log(action.payload)
+                state.tasks.push(action.payload);
+            })
+            .addCase(addTaskAsync.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
+
             .addCase(updateTaskStatusAsync.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -67,8 +109,24 @@ const taskSlice = createSlice({
                 const { _id, status } = action.payload;
                 console.log(_id, status)
             })
+            .addCase(updateTaskStatusAsync.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            })
+            .addCase(deleteTaskAsync.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(deleteTaskAsync.fulfilled, (state, action) => {
+                state.loading = false;
+                state.tasks = state.tasks.filter((task) => task._id !== action.payload);
+            })
+            .addCase(deleteTaskAsync.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.error.message;
+            });
     }
 })
 
-export const { updateTaskStatus } = taskSlice.actions
+export const { updateTaskStatus, optimisticAddTask } = taskSlice.actions
 export default taskSlice.reducer;

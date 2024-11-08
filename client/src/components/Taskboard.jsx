@@ -1,18 +1,40 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { DragDropContext, Droppable } from "react-beautiful-dnd";
-import { fetchTasks, updateTaskStatusAsync } from "../features/taskSlice";
-import TaskCard from "./TaskCard";
-import { updateTaskStatus } from "../features/taskSlice";
+import { DragDropContext } from "react-beautiful-dnd";
+import {
+  fetchTasks,
+  updateTaskStatusAsync,
+  updateTaskStatus,
+  addTaskAsync,
+  optimisticAddTask,
+} from "../features/taskSlice";
+import TaskColumn from "./TaskColumn";
 import ChatComponent from "./ChatComponent";
-
-import { Box, Fab } from "@mui/material";
+import {
+  Box,
+  Fab,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  TextField,
+  Button,
+} from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
+import AddIcon from "@mui/icons-material/Add";
 
 const Taskboard = () => {
   const dispatch = useDispatch();
   const { tasks } = useSelector((state) => state.tasks);
-  const [isChatOpen, setIsChatOpen] = useState(false); // State to control chat visibility
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [isAddTaskFormOpen, setIsAddTaskFormOpen] = useState(false);
+  const [newTask, setNewTask] = useState({
+    title: "",
+    status: "pending",
+    description: "",
+  });
+
+  const isFormValid = newTask.title && newTask.description && newTask.status;
 
   useEffect(() => {
     dispatch(fetchTasks());
@@ -23,8 +45,6 @@ const Taskboard = () => {
     ongoing: tasks.filter((task) => task.status === "ongoing") || [],
     completed: tasks.filter((task) => task.status === "completed") || [],
   };
-
-  if (!tasks) return null;
 
   const onDragEnd = (result) => {
     const source = result?.source;
@@ -47,11 +67,18 @@ const Taskboard = () => {
     );
   };
 
+  const handleAddTask = () => {
+    dispatch(optimisticAddTask(newTask));
+    dispatch(addTaskAsync(newTask));
+    setIsAddTaskFormOpen(false);
+    setNewTask({ title: "", status: "pending", description: "" });
+  };
+
   return (
     <>
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="container">
-          <div className="row">
+          <div className="row gx-3">
             {Object.entries(columns).map(([status, tasks]) => (
               <TaskColumn key={status} status={status} tasks={tasks} />
             ))}
@@ -59,7 +86,6 @@ const Taskboard = () => {
         </div>
       </DragDropContext>
 
-      {/* ChatComponent floating in the bottom-right corner */}
       {!isChatOpen && (
         <Box
           sx={{
@@ -78,14 +104,94 @@ const Taskboard = () => {
               height: 60,
               boxShadow: "0px 4px 12px rgba(0, 123, 255, 0.3)",
             }}
-            onClick={() => setIsChatOpen(true)} // Open the chat on click
+            onClick={() => setIsChatOpen(true)}
           >
             <ChatIcon />
           </Fab>
         </Box>
       )}
 
-      {/* Render ChatComponent when it's open */}
+      <Box
+        sx={{
+          position: "fixed",
+          bottom: 100,
+          right: 20,
+          zIndex: 9999,
+        }}
+      >
+        <Fab
+          sx={{
+            backgroundColor: "#28a745",
+            color: "#fff",
+            borderRadius: "50%",
+            width: 60,
+            height: 60,
+            boxShadow: "0px 4px 12px rgba(0, 123, 255, 0.3)",
+          }}
+          onClick={() => setIsAddTaskFormOpen(true)}
+        >
+          <AddIcon />
+        </Fab>
+      </Box>
+
+      <Dialog
+        open={isAddTaskFormOpen}
+        onClose={() => setIsAddTaskFormOpen(false)}
+      >
+        <DialogTitle>Add New Task</DialogTitle>
+        <DialogContent>
+          <p className="text-danger">All fields are required *</p>
+          <TextField
+            label="Title"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={newTask.title}
+            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+            required
+          />
+          <TextField
+            label="Description"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+            value={newTask.description}
+            onChange={(e) =>
+              setNewTask({ ...newTask, description: e.target.value })
+            }
+            required
+          />
+          <TextField
+            select
+            label="Status"
+            fullWidth
+            margin="normal"
+            value={newTask.status}
+            onChange={(e) => setNewTask({ ...newTask, status: e.target.value })}
+            SelectProps={{
+              native: true,
+            }}
+            required
+          >
+            <option value="pending">Pending</option>
+            <option value="ongoing">Ongoing</option>
+            <option value="completed">Completed</option>
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsAddTaskFormOpen(false)} color="primary">
+            Cancel
+          </Button>
+          <Button
+            onClick={handleAddTask}
+            color="primary"
+            disabled={!isFormValid}
+          >
+            Add Task
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {isChatOpen && (
         <Box
           sx={{
@@ -102,30 +208,6 @@ const Taskboard = () => {
         </Box>
       )}
     </>
-  );
-};
-
-const TaskColumn = ({ status, tasks }) => {
-  return (
-    <div className="col-md-4">
-      <h2 className="text-center">
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </h2>
-      <Droppable droppableId={status}>
-        {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-            className="bg-light p-3 rounded task-column"
-          >
-            {tasks.map((task, index) => (
-              <TaskCard key={task._id} task={task} index={index} />
-            ))}
-            {provided.placeholder}
-          </div>
-        )}
-      </Droppable>
-    </div>
   );
 };
 

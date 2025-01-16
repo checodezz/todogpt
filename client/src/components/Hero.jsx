@@ -103,7 +103,7 @@ const Hero = () => {
           transition: { type: "spring", stiffness: 300, damping: 25 },
         }}
       >
-        Powered by FinOpsly AI
+        Powered by chethanAI
       </motion.p>
 
       {/* Hero Subtitle with Parallax-like Effect */}

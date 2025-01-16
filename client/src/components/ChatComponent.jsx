@@ -23,7 +23,7 @@ const ChatComponent = ({ onClose }) => {
         role: "assistant",
         content: (
           <>
-            Hello! I am <strong>Finopsly</strong>, your AI Assistant. You can
+            Hello! I am <strong>chethanAI</strong>, your AI Assistant. You can
             ask me anything related to tasks.
           </>
         ),
